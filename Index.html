@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Maryam Anayat Ali – 3D Resume</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #181a20;}
+    #infoPanel {
+      position: absolute;
+      top: 20px; left: 20px;
+      background: rgba(20,20,20,0.94);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 18px 26px;
+      border-radius: 12px;
+      min-width: 320px; max-width: 500px;
+      box-shadow: 0 4px 24px #000a;
+      display: none;
+      z-index: 10;
+    }
+    #githubLogo {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      width: 64px;
+      height: 64px;
+      cursor: pointer;
+      z-index: 10;
+      filter: drop-shadow(0px 0px 8px #333);
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+    #githubLogo:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div id="infoPanel"></div>
+  <img id="githubLogo" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" title="My GitHub" />
+  <script src="https://unpkg.com/three@0.153.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.153.0/examples/js/controls/OrbitControls.js"></script>
+  <script>
+    // ==== 3D SCENE SETUP ====
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x181a20);
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.set(0, 2.5, 10);
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Controls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+    const dir = new THREE.DirectionalLight(0xffffff, 1);
+    dir.position.set(5,10,7);
+    scene.add(dir);
+
+    // ==== MAIN CUBE (NAME + CONTACT) ====
+    const cubeGeo = new THREE.BoxGeometry(2.4,2.4,2.4);
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = "#191c2c";
+    ctx.fillRect(0,0,512,512);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 34px Segoe UI";
+    ctx.fillText("Maryam Anayat Ali", 32, 84);
+    ctx.font = "22px Segoe UI";
+    ctx.fillText("AI Engineer", 32, 124);
+    ctx.font = "18px Segoe UI";
+    ctx.fillText("📞 +92-317083-0954", 32, 180);
+    ctx.fillText("✉️ maryamanayatali@gmail.com", 32, 210);
+    ctx.fillText("🌍 Islamabad, Pakistan", 32, 245);
+    ctx.fillStyle = "#6fbbf4";
+    ctx.fillText("🔗 LinkedIn", 32, 280);
+    ctx.fillStyle = "#bbb";
+    ctx.font = "16px Segoe UI";
+    ctx.fillText("Click cube for details", 32, 320);
+    const cubeMat = [
+      new THREE.MeshPhongMaterial({ color: 0x1a2030 }), // right
+      new THREE.MeshPhongMaterial({ color: 0x1a2030 }), // left
+      new THREE.MeshPhongMaterial({ color: 0x1a2030 }), // top
+      new THREE.MeshPhongMaterial({ color: 0x1a2030 }), // bottom
+      new THREE.MeshPhongMaterial({ map: new THREE.CanvasTexture(canvas) }), // front
+      new THREE.MeshPhongMaterial({ color: 0x1a2030 })  // back
+    ];
+    const mainCube = new THREE.Mesh(cubeGeo, cubeMat);
+    mainCube.position.set(0, 2.6, 0);
+    mainCube.userData.type = "info";
+    scene.add(mainCube);
+
+    // ==== 3D SKILL BOXES ====
+    const skills = [
+      { title:"Python", color:0x1abc9c, details:"Advanced Python, automation, scripting" },
+      { title:"ML/AI", color:0x9b59b6, details:"Modeling, Regression, Classification, NLP, CV, LLMs, GANs" },
+      { title:"Libraries", color:0x34495e, details:"TensorFlow, PyTorch, HuggingFace, Pandas, NLTK, spaCy" },
+      { title:"Automation", color:0xe67e22, details:"n8n, RPA Bots, API Orchestration, LLM Agents" },
+      { title:"Chatbots", color:0x2980b9, details:"GPT-4, Slack/Telegram/WhatsApp, Multilingual, Voice" },
+      { title:"Data", color:0x27ae60, details:"ETL, Web Scraping, Data Cleaning, SQL" },
+      { title:"DevOps", color:0xf1c40f, details:"AWS, Docker, Git, CI/CD" },
+      { title:"CyberSec", color:0xc0392b, details:"Pen Testing, Log Automation, InfoSec, Privacy AI" }
+    ];
+    const skillMeshes = [];
+    const radius = 5;
+    skills.forEach((skill, i) => {
+      const geo = new THREE.BoxGeometry(1.6, 0.7, 0.4);
+      const mat = new THREE.MeshPhongMaterial({ color: skill.color });
+      const mesh = new THREE.Mesh(geo, mat);
+      const angle = i/skills.length * Math.PI*2;
+      mesh.position.x = Math.cos(angle) * radius;
+      mesh.position.z = Math.sin(angle) * radius;
+      mesh.position.y = 0.2 + 1.0*Math.sin(angle);
+      mesh.userData = { type: "skill", ...skill };
+      scene.add(mesh);
+      skillMeshes.push(mesh);
+
+      // Add label
+      const textCanvas = document.createElement('canvas');
+      textCanvas.width = 256; textCanvas.height = 64;
+      const tctx = textCanvas.getContext('2d');
+      tctx.fillStyle = "#fff";
+      tctx.font = "bold 29px Segoe UI";
+      tctx.fillText(skill.title, 18, 44);
+      const textMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(textCanvas), transparent: true });
+      const textGeo = new THREE.PlaneGeometry(1.3, 0.32);
+      const textMesh = new THREE.Mesh(textGeo, textMat);
+      textMesh.position.copy(mesh.position);
+      textMesh.position.y += 0.5;
+      scene.add(textMesh);
+      mesh.userData.textMesh = textMesh;
+    });
+
+    // ==== EXPERIENCE Spheres ====
+    const experiences = [
+      { title: "Upwork", years: "2025–Now", desc: "Custom AI chatbots, n8n automations, LLM agents" },
+      { title: "NCSAEL Lab", years: "2024–25", desc: "Cybersecurity automation, ETL, dashboards" },
+      { title: "Syszone AI", years: "2023", desc: "CV modules, fraud detection, SaaS AI, AWS" },
+      { title: "CyberSec Co.", years: "2022", desc: "GPT bots for cybersecurity, compliance, legal doc bots" },
+      { title: "HYPR", years: "2021", desc: "Biometric verification, DL pipelines" }
+    ];
+    experiences.forEach((exp, i) => {
+      const geo = new THREE.SphereGeometry(0.45, 32, 32);
+      const mat = new THREE.MeshPhongMaterial({ color: 0x6c3483 });
+      const mesh = new THREE.Mesh(geo, mat);
+      const angle = i/experiences.length * Math.PI*2;
+      mesh.position.set(Math.cos(angle) * 3.5, -2, Math.sin(angle) * 3.5);
+      mesh.userData = { type: "exp", ...exp };
+      scene.add(mesh);
+
+      // Add label
+      const labelCanvas = document.createElement('canvas');
+      labelCanvas.width = 180; labelCanvas.height = 40;
+      const lctx = labelCanvas.getContext('2d');
+      lctx.fillStyle = "#fff";
+      lctx.font = "bold 17px Segoe UI";
+      lctx.fillText(exp.title, 10, 28);
+      const labelMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(labelCanvas), transparent: true });
+      const labelGeo = new THREE.PlaneGeometry(1.1, 0.22);
+      const labelMesh = new THREE.Mesh(labelGeo, labelMat);
+      labelMesh.position.copy(mesh.position);
+      labelMesh.position.y += 0.55;
+      scene.add(labelMesh);
+      mesh.userData.labelMesh = labelMesh;
+    });
+
+    // ==== RAYCASTER for INTERACTION ====
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const infoPanel = document.getElementById('infoPanel');
+
+    function showPanel(html, x, y) {
+      infoPanel.innerHTML = html;
+      infoPanel.style.display = "block";
+      infoPanel.style.left = (x+12)+"px";
+      infoPanel.style.top = (y-10)+"px";
+    }
+    function hidePanel() { infoPanel.style.display = "none"; }
+
+    window.addEventListener('pointerdown', (event) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(
+        [mainCube, ...skillMeshes, ...scene.children.filter(o=>o.userData.type==="exp")]
+      );
+      if (intersects.length > 0) {
+        const obj = intersects[0].object;
+        if (obj.userData.type === "info") {
+          showPanel(
+            `<h2>Maryam Anayat Ali</h2>
+             <b>AI Engineer</b><br>
+             📞 +92-317083-0954<br>
+             ✉️ maryamanayatali@gmail.com<br>
+             🌍 Islamabad, Pakistan<br>
+             <a style="color:#6fbbf4;" href="https://www.linkedin.com/in/maryam-a-184181350/" target="_blank">🔗 LinkedIn</a>
+             <hr>
+             <b>Summary:</b><br>
+             AI & Python developer with 15+ smart systems built. Automated workflows (n8n, 45%+ efficiency). Experience from startups to national labs in CV, NLP, LLMs, e-commerce, healthcare, cybersecurity.`
+            , event.clientX, event.clientY);
+        } else if (obj.userData.type === "skill") {
+          showPanel(
+            `<h2>${obj.userData.title}</h2>${obj.userData.details}`,
+            event.clientX, event.clientY
+          );
+        } else if (obj.userData.type === "exp") {
+          showPanel(
+            `<h2>${obj.userData.title}</h2>
+            <b>${obj.userData.years}</b><br>
+            ${obj.userData.desc}`,
+            event.clientX, event.clientY
+          );
+        }
+      } else {
+        hidePanel();
+      }
+    });
+    window.addEventListener('pointermove', (event) => {
+      hidePanel();
+    });
+
+    // ==== WINDOW RESIZE ====
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ==== GITHUB LOGO LINK ====
+    document.getElementById('githubLogo').onclick = () =>
+      window.open('https://github.com/Maryam23468', '_blank');
+
+    // ==== ANIMATION LOOP ====
+    function animate() {
+      requestAnimationFrame(animate);
+      mainCube.rotation.y += 0.005;
+      skillMeshes.forEach((m, i) => {
+        m.rotation.y += 0.01 + i*0.0003;
+        m.userData.textMesh.lookAt(camera.position.x, m.userData.textMesh.position.y, camera.position.z);
+      });
+      scene.children.filter(o=>o.userData.labelMesh).forEach(m => {
+        m.userData.labelMesh.lookAt(camera.position.x, m.userData.labelMesh.position.y, camera.position.z);
+      });
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
